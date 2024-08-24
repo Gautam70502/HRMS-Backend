@@ -12,6 +12,7 @@ import {
 } from "../utils.js";
 import { UploadFileToCloudinary } from "./cloudinaryservice.js";
 import { getUserByEmail } from "./userservice.js";
+import jwt from "jsonwebtoken";
 
 export const signUp = async (req, res) => {
   try {
@@ -30,6 +31,12 @@ export const signUp = async (req, res) => {
     } = req.body;
 
     const isExistingUser = await userModel.findOne({ emailId });
+
+    const isExistingUserName = await userModel.findOne({ userName });
+
+    if (isExistingUserName) {
+      throw customError("username already exist", 400);
+    }
 
     if (isExistingUser) {
       throw customError("emailId Already exist", 400);
@@ -87,23 +94,42 @@ export const signUp = async (req, res) => {
 
 export const Login = async (req, res) => {
   try {
-    const { emailId, password } = req.body;
-    const user = await userModel.findOne({ emailId });
+    const { emailId, userName, password } = req.body;
+    let user;
+    if (userName || emailId) {
+      user = await userModel.findOne({
+        $or: [
+          {
+            emailId,
+          },
+          {
+            userName,
+          },
+        ],
+      });
+    }
     if (!user) {
-      throw customError("Email Not Found", 404);
+      throw customError("User Not Found", 404);
     }
     const verifyPassword = await decriptPassword(password, user.password);
     if (!verifyPassword) {
       throw customError("Wrong Password", 400);
     }
-    const token = await generateJwtToken(
+    const accesstoken = await generateJwtToken(
       user._id,
       "1h",
       process.env.JWT_SECRET_KEY,
     );
+    const refreshtoken = await generateJwtToken(
+      user._id,
+      "7 days",
+      process.env.JWT_SECRET_KEY,
+    );
     return res.status(200).json({
       message: "Login Successfully",
-      data: { role: user?.role, token },
+      data: user,
+      accesstoken,
+      refreshtoken,
     });
   } catch (err) {
     console.log(err);
@@ -132,7 +158,11 @@ export const generatePasswordLink = async (req, res) => {
     });
     await passwordrecovery.save();
 
-    const { transporter, mailOptions } = sendMail(emailId, recoveryToken);
+    const { transporter, mailOptions } = sendMail(
+      emailId,
+      { val: recoveryToken },
+      "forgetpassword",
+    );
     transporter.sendMail(mailOptions, (error, info) => {
       if (error) {
         console.log(error);
@@ -179,6 +209,36 @@ export const updateUserPassword = async (req, res) => {
     } else {
       throw customError("recoverytoken time is expired", 400);
     }
+  } catch (err) {
+    console.log(err);
+    return res
+      .status(err.statuscode || 500)
+      .json({ error: err.errormessage || "internal server error" });
+  }
+};
+
+export const renewToken = async (req, res) => {
+  try {
+    const { refreshtoken } = req.body;
+
+    if (!refreshtoken) {
+      throw customError("Token Not Found", 404);
+    }
+    const { userId, exp } = jwt.verify(
+      refreshtoken,
+      process.env.JWT_SECRET_KEY,
+    );
+    if (Date.now() >= exp * 1000) {
+      throw customError("Token is Expired, Please Login Again", 401);
+    }
+    const accesstoken = await generateJwtToken(
+      userId,
+      "1h",
+      process.env.JWT_SECRET_KEY,
+    );
+    return res
+      .status(200)
+      .json({ message: "accesstoken generated", accesstoken });
   } catch (err) {
     console.log(err);
     return res
