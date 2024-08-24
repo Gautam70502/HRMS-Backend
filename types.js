@@ -20,9 +20,10 @@ export const userRegistrationValidation = Joi.object({
 });
 
 export const userLoginValidation = Joi.object({
-  emailId: Joi.string().required(),
+  emailId: Joi.string().optional(),
+  userName: Joi.string().optional(),
   password: Joi.string().required(),
-});
+}).xor("emailId", "userName");
 
 export const generatePasswordLinkValidation = Joi.object({
   emailId: Joi.string().required(),

@@ -11,8 +11,10 @@ import {
   Login,
   generatePasswordLink,
   updateUserPassword,
+  renewToken,
 } from "../services/authservice.js";
 import uploadStorage from "../middleware/multer.js";
+import { verifyuser } from "../middleware/verifyuser.js";
 const router = express.Router();
 
 router.post(
@@ -32,5 +34,6 @@ router.patch(
   validateRequestBody(updateUserPasswordValidation),
   updateUserPassword,
 );
+router.post("/renewToken", renewToken);
 
 export default router;
