@@ -1,5 +1,6 @@
 import passwordRecoveryModel from "../models/passwordrecoverymodel.js";
 import userModel from "../models/usermodel.js";
+import otpModel from "../models/otpmodel.js";
 import {
   customError,
   encriptPassword,
@@ -9,6 +10,7 @@ import {
   generateJwtToken,
   generateRecoveryToken,
   sendMail,
+  generateOTP,
 } from "../utils.js";
 import { UploadFileToCloudinary } from "./cloudinaryservice.js";
 import { getUserByEmail } from "./userservice.js";
@@ -239,6 +241,91 @@ export const renewToken = async (req, res) => {
     return res
       .status(200)
       .json({ message: "accesstoken generated", accesstoken });
+  } catch (err) {
+    console.log(err);
+    return res
+      .status(err.statuscode || 500)
+      .json({ error: err.errormessage || "internal server error" });
+  }
+};
+
+export const generateOtp = async (req, res) => {
+  try {
+    const { userId } = req;
+    const user = await userModel.findById(userId);
+
+    if (!user) {
+      throw customError("User Not Found", 404);
+    }
+    const otp = generateOTP(6);
+    let otpArr = [],
+      otpmodel;
+    otpArr.push({ otp, createdAt: Date.now() });
+    const userOtp = await otpModel.findOne({ userId });
+    if (userOtp?.otps.length) {
+      otpArr = [...userOtp.otps, ...otpArr];
+      await otpModel.updateOne(
+        { _id: userOtp._id },
+        { $set: { otps: otpArr } },
+        { upsert: false },
+      );
+    }
+    if (!userOtp) {
+      otpmodel = new otpModel({ userId, otps: otpArr });
+      await otpmodel.save();
+    }
+
+    const { transporter, mailOptions } = sendMail(
+      user.emailId,
+      { val: otp },
+      "sendotp",
+    );
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.log(error);
+        throw customError("unable to send mail", 400);
+      }
+      res
+        .status(200)
+        .json({ message: "password recovery mail sent successfully", info });
+    });
+  } catch (err) {
+    console.log(err);
+    return res
+      .status(err.statuscode || 500)
+      .json({ error: err.errormessage || "internal server error" });
+  }
+};
+
+export const verifyOtp = async (req, res) => {
+  try {
+    const {
+      userId,
+      body: { otp },
+    } = req;
+    if (!otp) {
+      throw customError("Otp is Required", 404);
+    }
+    const user = await userModel.findOne({ _id: userId });
+    if (!user) {
+      throw customError("User Not Found", 404);
+    }
+    const userOtp = await otpModel.findOne({ userId });
+    const latestOtp = userOtp?.otps
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .find(() => true);
+    if (!latestOtp.otp || otp !== latestOtp.otp) {
+      throw customError("Otp Not Found", 404);
+    }
+    const removeRemainingOtp = userOtp?.otps.filter(
+      (item) => item?.createdAt >= latestOtp?.createdAt,
+    );
+    await otpModel.updateOne(
+      { _id: userOtp._id },
+      { $set: { otps: removeRemainingOtp } },
+      { upsert: false },
+    );
+    return res.status(200).json({ message: "Successfully verified Otp" });
   } catch (err) {
     console.log(err);
     return res
