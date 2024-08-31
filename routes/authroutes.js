@@ -12,6 +12,8 @@ import {
   generatePasswordLink,
   updateUserPassword,
   renewToken,
+  generateOtp,
+  verifyOtp,
 } from "../services/authservice.js";
 import uploadStorage from "../middleware/multer.js";
 import { verifyuser } from "../middleware/verifyuser.js";
@@ -35,5 +37,7 @@ router.patch(
   updateUserPassword,
 );
 router.post("/renewToken", renewToken);
+router.post("/generateOtp", verifyuser, generateOtp);
+router.post("/verifyotp", verifyuser, verifyOtp);
 
 export default router;

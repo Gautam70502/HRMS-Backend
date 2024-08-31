@@ -20,7 +20,7 @@ export const getRandomSecurityQuestion = () => {
 
 export const customError = (errorMessage, statusCode) => {
   return {
-    errormessage: new Error(errorMessage).message,
+    errormessage: errorMessage,
     statuscode: statusCode,
   };
 };
@@ -93,7 +93,10 @@ export const sendMail = (emailId, dynamicVar, actionType) => {
   var mailOptions = {
     from: `${process.env.GOOGLE_APP_EMAILID}`,
     to: `gautamrathod70502@gmail.com`,
-    subject: "Reset Password Link",
+    subject:
+      actionType === "forgotpassword"
+        ? "Reset Password Link"
+        : "One Time Password",
     html:
       actionType === "forgetpassword"
         ? `${forgetPasswordEmailTemplate(dynamicVar.val)}`
@@ -101,4 +104,10 @@ export const sendMail = (emailId, dynamicVar, actionType) => {
   };
 
   return { transporter, mailOptions };
+};
+
+export const generateOTP = (length = 6) => {
+  const max = Math.pow(10, length);
+  const otp = crypto.randomInt(0, max).toString().padStart(length, "0");
+  return otp;
 };
