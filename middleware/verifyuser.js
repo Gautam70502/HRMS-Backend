@@ -23,6 +23,7 @@ export const verifyuser = async (req, res, next) => {
     req.userId = userId;
     next();
   } catch (err) {
+    console.log(err);
     return res
       .status(err.statuscode || 403)
       .json({ error: err.errormessage || "Forbidden" });

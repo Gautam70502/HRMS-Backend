@@ -14,7 +14,7 @@ import {
   renewToken,
   generateOtp,
   verifyOtp,
-} from "../services/authservice.js";
+} from "../controllers/authcontroller.js";
 import uploadStorage from "../middleware/multer.js";
 import { verifyuser } from "../middleware/verifyuser.js";
 const router = express.Router();
