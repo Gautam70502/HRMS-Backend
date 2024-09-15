@@ -33,3 +33,8 @@ export const updateUserPasswordValidation = Joi.object({
   recoveryToken: Joi.string(),
   password: Joi.string().min(4).required(),
 });
+
+export const updateUserFieldValidation = Joi.object({
+  fieldName: Joi.string().required(),
+  fieldValue: Joi.any().required(),
+});

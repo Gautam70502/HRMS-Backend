@@ -111,3 +111,10 @@ export const generateOTP = (length = 6) => {
   const otp = crypto.randomInt(0, max).toString().padStart(length, "0");
   return otp;
 };
+
+export const getPublicIdFromImageUrl = (imageUrl) => {
+  //http://res.cloudinary.com/dqqu2761f/image/upload/v1725199587/fr9dhhs2twiz0e9vvofh.jpg
+  let splitByDash = imageUrl.split("/");
+  let publicId = splitByDash[splitByDash.length - 1].split(".")[0];
+  return publicId;
+};
