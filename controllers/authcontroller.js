@@ -1,12 +1,15 @@
 import { authservice, userservice } from "../services/index.js";
+import logger from "winston";
 
 export const signUp = async (req, res) => {
   try {
     const securityQuestion = await authservice.signUp(req.body, req.file);
+    logger.debug("New Account Created Successfully!");
     return res
       .status(200)
       .json({ message: "user created successfully", data: securityQuestion });
   } catch (err) {
+    logger.debug("unable to create New Account", { err });
     return res
       .status(err.statuscode || 500)
       .json({ error: err.errormessage || "internal server error" });

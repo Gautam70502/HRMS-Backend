@@ -109,7 +109,7 @@ export const sendMail = (emailId, dynamicVar, actionType) => {
 export const generateOTP = (length = 6) => {
   const max = Math.pow(10, length);
   const otp = crypto.randomInt(0, max).toString().padStart(length, "0");
-  return otp;
+  return Number(otp);
 };
 
 export const getPublicIdFromImageUrl = (imageUrl) => {
