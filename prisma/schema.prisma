@@ -8,12 +8,12 @@ generator client {
 }
 
 model User {
-  id                Int       @id @default(autoincrement())
-  fullName          String
-  userName          String
-  emailId           String
+  id                String    @id @default(uuid())
+  fullName          String    
+  userName          String    @unique
+  emailId           String    @unique
   password          String
-  phoneNumber       Int
+  phoneNumber       String
   dateOfBirth       DateTime
   address           String
   profilePicture    String?
@@ -24,6 +24,19 @@ model User {
   @@map("users")
 }
 
+model passwordRecovery {
+  id                  String    @id @default(uuid())
+  userId              String    
+  recoveryToken       String
+  recoveryTokenExpiry DateTime
+}
+
+model userOtp {
+  id                  String    @id @default(uuid())
+  userId              String    
+  otp                 Int
+  createdAt           DateTime  @default(now())
+}
 enum Role {
   USER
   ADMIN

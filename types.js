@@ -14,8 +14,8 @@ export const userRegistrationValidation = Joi.object({
   address: Joi.string().optional(),
   profilePicture: Joi.string().optional(),
   securityQuestion: Joi.string().optional(),
-  securityAnswer: Joi.string().optional(),
-  role: Joi.string().optional().default("user"),
+  securityAnswer: Joi.string().optional().default(null),
+  role: Joi.string().optional().default("USER"),
   isMFAEnabled: Joi.bool().optional().default(false),
 });
 
