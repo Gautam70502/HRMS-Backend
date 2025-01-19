@@ -2,6 +2,7 @@ import express from "express";
 import {
   updateUserProfile,
   updateUserField,
+  listUsers,
 } from "../controllers/usercontroller.js";
 import { verifyuser } from "../middleware/verifyuser.js";
 import { validateRequestBody } from "../middleware/validationRequestBody.js";
@@ -17,9 +18,10 @@ router.patch(
 );
 router.post(
   "/updateuserfield",
-  validateRequestBody(updateUserFieldValidation),
+  // validateRequestBody(updateUserFieldValidation),
   verifyuser,
   updateUserField,
 );
+router.get("/listusers", listUsers);
 
 export default router;

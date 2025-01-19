@@ -99,7 +99,7 @@ class userService {
         throw customError("User Not Found", 404);
       }
       console.log(user);
-      const keys = Object.keys(user.toObject());
+      const keys = Object.keys(user);
       console.log(keys);
       if (!keys.includes(fieldName)) {
         throw customError("Field Does Not Exist", 404);
@@ -119,7 +119,8 @@ class userService {
           },
         });
       } else if (fieldName === "userName") {
-        const duplicateUserName = this.getUserByUserName(fieldValue);
+        const duplicateUserName = await this.getUserByUserName(fieldValue);
+        console.log(duplicateUserName);
         if (duplicateUserName) {
           throw customError("UserName already exists");
         }
@@ -140,11 +141,31 @@ class userService {
             [fieldName]: fieldValue,
           },
         });
-        console.log(val);
+        // console.log(val);
       }
     } catch (err) {
       throw err;
     }
+  }
+
+  async listUsers(pageNumber, pageLength) {
+    try {
+      const page = Number(pageNumber) || 1;
+      const limit = Number(pageLength) || 5;
+      const skip = (page - 1) * limit;
+      const users = await this._prisma.user.findMany({
+        skip: skip,
+        take: limit,
+      });
+      return users;
+    } catch (err) {
+      throw err;
+    }
+  }
+
+  async getSearchUser() {
+    try {
+    } catch (err) {}
   }
 }
 
